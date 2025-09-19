@@ -86,3 +86,4 @@ coverage/
 
 # Redis dumps (if running locally)
 dump.rdbtmp/
+.env
