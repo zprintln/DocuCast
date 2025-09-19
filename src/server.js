@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 import { runSearch, getSearchHistory, getPaperById } from './orchestrator.js';
 import { getAllPapers, searchPapers, getPaperStats } from './redisClient.js';
 import { cleanupOldAudio } from './tts.js';
-import { generateResearchReport, getResearchReport } from './researchReport.js';
+import { generateResearchReport, getResearchReport, testAudioConversion } from './researchReport.js';
 
 dotenv.config();
 
@@ -201,6 +201,24 @@ app.get('/research-report/:id', async (req, res) => {
     console.error('Get research report error:', error);
     res.status(500).json({ 
       error: 'Failed to get research report', 
+      message: error.message 
+    });
+  }
+});
+
+// Test audio conversion
+app.post('/test-audio', async (req, res) => {
+  try {
+    console.log('Testing audio conversion...');
+    
+    const result = await testAudioConversion();
+    res.json(result);
+    
+  } catch (error) {
+    console.error('Audio test error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Audio test failed', 
       message: error.message 
     });
   }
