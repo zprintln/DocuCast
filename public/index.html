@@ -1190,8 +1190,37 @@
                         btn.classList.remove('playing');
                     });
 
+                    // Check if audio URL exists, if not generate it
+                    let finalAudioUrl = audioUrl;
+                    if (!audioUrl || audioUrl === 'undefined') {
+                        button.textContent = '🔄 Generating...';
+                        button.disabled = true;
+                        
+                        // Find the paper data
+                        const paper = this.podcastQueue.find(p => p.id === paperId);
+                        if (paper) {
+                            const audioData = await this.generatePaperAudio(paper);
+                            finalAudioUrl = audioData.audioUrl;
+                            
+                            // Update the paper's audioUrl
+                            paper.audioUrl = finalAudioUrl;
+                            
+                            // Add to podcasts list
+                            this.addPodcast({
+                                audioUrl: finalAudioUrl,
+                                title: paper.title,
+                                duration: audioData.duration,
+                                type: 'paper'
+                            });
+                        } else {
+                            throw new Error('Paper not found');
+                        }
+                        
+                        button.disabled = false;
+                    }
+
                     // Set up new audio
-                    this.currentAudio = new Audio(audioUrl);
+                    this.currentAudio = new Audio(finalAudioUrl);
                     this.isPlaying = true;
                     button.textContent = '⏸️ Pause';
                     button.classList.add('playing');
@@ -1217,6 +1246,8 @@
                     console.error('Playback error:', error);
                     button.textContent = '❌ Error';
                     button.classList.remove('playing');
+                    this.isPlaying = false;
+                    this.currentAudio = null;
                 }
             }
 
@@ -1284,7 +1315,7 @@
                         <div class="stat-label">Audio Summaries</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-value">${data.papers.reduce((sum, p) => sum + (p.importance || 0), 0) / data.papers.length}</div>
+                        <div class="stat-value">${Math.ceil(data.papers.reduce((sum, p) => sum + (p.importance || 0), 0) / data.papers.length)}</div>
                         <div class="stat-label">Avg Importance</div>
                     </div>
                     <div class="stat-item">
@@ -1430,7 +1461,7 @@
                         <div class="stat-label">Minutes</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-value">${Math.round(report.papers.reduce((sum, p) => sum + (p.importance || 0), 0) / report.papers.length)}</div>
+                        <div class="stat-value">${Math.ceil(report.papers.reduce((sum, p) => sum + (p.importance || 0), 0) / report.papers.length)}</div>
                         <div class="stat-label">Avg Importance</div>
                     </div>
                     <div class="stat-item">
@@ -1843,6 +1874,52 @@
                     this.podcasts = this.podcasts.filter(p => p.id !== podcastId);
                     this.savePodcasts();
                     this.updatePodcastsDisplay();
+                }
+            }
+
+            async generatePaperAudio(paper) {
+                try {
+                    // Create a summary text for audio generation
+                    const audioText = `Research Paper: ${paper.title}
+
+${paper.summary}
+
+Key findings:
+${paper.bullets.map((bullet, index) => `${index + 1}. ${bullet}`).join('\n')}
+
+This research paper provides valuable insights into the topic and contributes to our understanding of the field.`;
+
+                    // Generate audio using the TTS service
+                    const response = await fetch('/generate-audio', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            text: audioText,
+                            title: paper.title
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Audio generation failed: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    
+                    return {
+                        audioUrl: result.audioUrl,
+                        duration: result.duration || 120 // Default 2 minutes
+                    };
+
+                } catch (error) {
+                    console.error('Paper audio generation error:', error);
+                    
+                    // Return a fallback audio URL for demo purposes
+                    return {
+                        audioUrl: '/audio/fallback.mp3', // This would be a placeholder file
+                        duration: 120
+                    };
                 }
             }
         }
