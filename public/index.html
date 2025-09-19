@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecureScholar - Voice Research Assistant</title>
+    <title>DocuCast - Turn Documents into Podcasts</title>
     <style>
         * {
             margin: 0;
@@ -12,124 +12,268 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            line-height: 1.5;
+            color: #1d1d1f;
+            background: #f5f5f7;
             min-height: 100vh;
+            margin: 0;
+            padding: 0;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 980px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 40px 20px;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 40px;
-            color: white;
+            margin-bottom: 80px;
+            color: #1d1d1f;
         }
 
         .header h1 {
-            font-size: 3rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-size: 4rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #1d1d1f;
+            letter-spacing: -0.02em;
         }
 
         .header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
+            font-size: 1.5rem;
+            font-weight: 400;
+            color: #86868b;
+            margin-bottom: 12px;
         }
 
-        .search-container {
+        .header .tagline {
+            font-size: 1.1rem;
+            color: #86868b;
+            font-weight: 400;
+        }
+
+        .main-container {
             background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            margin-bottom: 30px;
+            border-radius: 18px;
+            padding: 48px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 40px;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+        .feature-tabs {
+            display: flex;
+            margin-bottom: 48px;
+            background: #f5f5f7;
+            border-radius: 12px;
+            padding: 4px;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            font-size: 17px;
+            font-weight: 500;
+            color: #86868b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .tab-button.active {
+            color: #1d1d1f;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-button:hover:not(.active) {
+            color: #1d1d1f;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .upload-area {
+            border: 2px dashed #d2d2d7;
+            border-radius: 12px;
+            padding: 48px;
+            text-align: center;
+            background: #f5f5f7;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: #007aff;
+            background: rgba(0, 122, 255, 0.05);
+        }
+
+        .upload-area.dragover {
+            border-color: #007aff;
+            background: rgba(0, 122, 255, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+            color: #86868b;
+        }
+
+        .upload-text {
+            font-size: 17px;
+            color: #1d1d1f;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .upload-subtext {
+            font-size: 15px;
+            color: #86868b;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-info {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f5f5f7;
+            border-radius: 12px;
+            display: none;
+        }
+
+        .file-name {
+            font-weight: 500;
+            color: #1d1d1f;
+            font-size: 17px;
+        }
+
+        .file-size {
+            color: #86868b;
+            font-size: 15px;
+            margin-top: 4px;
         }
 
         .search-form {
             display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
+            gap: 12px;
+            margin-bottom: 32px;
         }
 
         .search-input {
             flex: 1;
-            padding: 15px;
-            border: 2px solid #e1e5e9;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: border-color 0.3s;
+            padding: 16px 20px;
+            border: 1px solid #d2d2d7;
+            border-radius: 12px;
+            font-size: 17px;
+            transition: all 0.2s ease;
+            background: white;
         }
 
         .search-input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #007aff;
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
         }
 
-        .search-btn {
-            padding: 15px 30px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .action-btn {
+            padding: 12px 24px;
+            background: #007aff;
             color: white;
             border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 500;
             cursor: pointer;
-            transition: transform 0.2s;
-        }
-
-        .search-btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .search-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .options {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .option-group {
+            transition: all 0.2s ease;
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
+        .action-btn:hover {
+            background: #0056b3;
+            transform: translateY(-1px);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+            background: #d2d2d7;
+        }
+
+        .action-btn.secondary {
+            background: #1d1d1f;
+        }
+
+        .action-btn.secondary:hover {
+            background: #000;
+        }
+
+        .options {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 32px;
+        }
+
+        .option-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
         .option-group label {
             font-weight: 500;
-            color: #555;
+            color: #1d1d1f;
+            font-size: 15px;
         }
 
         .option-group input, .option-group select {
             padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
+            border: 1px solid #d2d2d7;
+            border-radius: 8px;
+            font-size: 15px;
+            background: white;
+            transition: border-color 0.2s ease;
+        }
+
+        .option-group input:focus, .option-group select:focus {
+            outline: none;
+            border-color: #007aff;
         }
 
         .loading {
             text-align: center;
-            padding: 40px;
-            color: #666;
+            padding: 60px 40px;
+            color: #86868b;
         }
 
         .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            border: 3px solid #f5f5f7;
+            border-top: 3px solid #007aff;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 32px;
+            height: 32px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
+            margin: 0 auto 24px;
         }
 
         @keyframes spin {
@@ -139,61 +283,85 @@
 
         .results {
             background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border-radius: 18px;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            position: relative;
+        }
+
+        .results::before {
+            content: "Click outside to clear results";
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            font-size: 12px;
+            color: #86868b;
+            opacity: 0.7;
+            font-style: italic;
+        }
+
+        .results.fade-out {
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
         }
 
         .results-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
+            margin-bottom: 32px;
             padding-bottom: 20px;
-            border-bottom: 2px solid #f0f0f0;
+            border-bottom: 1px solid #f5f5f7;
         }
 
         .results-title {
-            font-size: 1.5rem;
-            color: #333;
+            font-size: 28px;
+            font-weight: 600;
+            color: #1d1d1f;
+            letter-spacing: -0.01em;
         }
 
         .podcast-controls {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             align-items: center;
         }
 
         .podcast-btn {
             padding: 10px 20px;
-            background: #28a745;
+            background: #007aff;
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             font-weight: 500;
-            transition: background 0.3s;
+            font-size: 15px;
+            transition: all 0.2s ease;
         }
 
         .podcast-btn:hover {
-            background: #218838;
+            background: #0056b3;
         }
 
         .podcast-btn.playing {
-            background: #dc3545;
+            background: #ff3b30;
         }
 
         .paper-card {
-            border: 1px solid #e1e5e9;
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 20px;
-            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid #f5f5f7;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            transition: all 0.2s ease;
+            background: white;
         }
 
         .paper-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            border-color: #e5e5ea;
         }
 
         .paper-header {
@@ -204,43 +372,46 @@
         }
 
         .paper-title {
-            font-size: 1.3rem;
+            font-size: 22px;
             font-weight: 600;
-            color: #333;
-            margin-bottom: 8px;
-            line-height: 1.4;
+            color: #1d1d1f;
+            margin-bottom: 12px;
+            line-height: 1.3;
+            letter-spacing: -0.01em;
         }
 
         .paper-authors {
-            color: #666;
-            font-size: 0.9rem;
-            margin-bottom: 10px;
+            color: #86868b;
+            font-size: 15px;
+            margin-bottom: 12px;
         }
 
         .paper-meta {
             display: flex;
-            gap: 15px;
-            font-size: 0.85rem;
-            color: #888;
+            gap: 16px;
+            font-size: 13px;
+            color: #86868b;
+            flex-wrap: wrap;
         }
 
         .importance-badge {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #007aff;
             color: white;
-            padding: 4px 12px;
+            padding: 6px 12px;
             border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
+            font-size: 12px;
+            font-weight: 500;
         }
 
         .paper-summary {
-            margin: 20px 0;
+            margin: 24px 0;
             line-height: 1.6;
-            color: #555;
+            color: #1d1d1f;
+            font-size: 17px;
         }
 
         .paper-bullets {
-            margin: 15px 0;
+            margin: 20px 0;
         }
 
         .paper-bullets ul {
@@ -250,62 +421,66 @@
 
         .paper-bullets li {
             padding: 8px 0;
-            padding-left: 25px;
+            padding-left: 24px;
             position: relative;
-            color: #666;
+            color: #1d1d1f;
+            font-size: 15px;
         }
 
         .paper-bullets li:before {
-            content: "▶";
+            content: "•";
             position: absolute;
             left: 0;
-            color: #667eea;
-            font-size: 0.8rem;
+            color: #007aff;
+            font-size: 16px;
+            font-weight: bold;
         }
 
         .audio-controls {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             align-items: center;
-            margin-top: 20px;
+            margin-top: 24px;
             padding-top: 20px;
-            border-top: 1px solid #f0f0f0;
+            border-top: 1px solid #f5f5f7;
         }
 
         .play-btn {
-            padding: 12px 24px;
-            background: #667eea;
+            padding: 10px 20px;
+            background: #007aff;
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             font-weight: 500;
+            font-size: 15px;
             display: flex;
             align-items: center;
             gap: 8px;
-            transition: background 0.3s;
+            transition: all 0.2s ease;
         }
 
         .play-btn:hover {
-            background: #5a6fd8;
+            background: #0056b3;
         }
 
         .play-btn.playing {
-            background: #dc3545;
+            background: #ff3b30;
         }
 
         .audio-info {
-            font-size: 0.9rem;
-            color: #666;
+            font-size: 15px;
+            color: #86868b;
         }
 
         .error {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
-            border: 1px solid #f5c6cb;
+            background: #ffebee;
+            color: #c62828;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin: 24px 0;
+            border: 1px solid #ffcdd2;
+            font-size: 15px;
         }
 
         .stats {
@@ -322,66 +497,71 @@
         }
 
         .research-report-section {
-            margin-top: 30px;
-            padding: 25px;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border-radius: 12px;
-            border: 2px solid #dee2e6;
+            margin-top: 40px;
+            padding: 32px;
+            background: #f5f5f7;
+            border-radius: 16px;
+            border: 1px solid #e5e5ea;
             text-align: center;
         }
 
         .research-report-section h3 {
-            color: #495057;
-            margin-bottom: 10px;
-            font-size: 1.3rem;
+            color: #1d1d1f;
+            margin-bottom: 12px;
+            font-size: 22px;
+            font-weight: 600;
         }
 
         .research-report-section p {
-            color: #6c757d;
-            margin-bottom: 20px;
-            font-size: 0.95rem;
+            color: #86868b;
+            margin-bottom: 24px;
+            font-size: 17px;
         }
 
         .research-report-btn {
-            padding: 15px 30px;
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            padding: 12px 24px;
+            background: #1d1d1f;
             color: white;
             border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 500;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.2s ease;
         }
 
         .research-report-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+            background: #000;
+            transform: translateY(-1px);
         }
 
         .research-report-btn:disabled {
-            opacity: 0.6;
+            opacity: 0.4;
             cursor: not-allowed;
             transform: none;
+            background: #d2d2d7;
         }
 
 
         .report-summary {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            border-left: 4px solid #28a745;
+            background: #f5f5f7;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            border-left: 4px solid #007aff;
         }
 
         .report-summary h3 {
-            color: #28a745;
-            margin-bottom: 15px;
+            color: #1d1d1f;
+            margin-bottom: 16px;
+            font-size: 20px;
+            font-weight: 600;
         }
 
         .report-summary p {
             line-height: 1.6;
-            color: #495057;
+            color: #1d1d1f;
+            font-size: 17px;
         }
 
         .report-details {
@@ -497,46 +677,97 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔬 SecureScholar</h1>
-            <p>Voice Research Assistant powered by AI</p>
+            <h1>🎙️ DocuCast</h1>
+            <p>Turn Documents into Podcasts</p>
+            <div class="tagline">Transform any document into an engaging audio experience</div>
         </div>
 
-        <div class="search-container">
-            <form class="search-form" id="searchForm">
-                <input 
-                    type="text" 
-                    class="search-input" 
-                    id="searchInput" 
-                    placeholder="Enter your research topic (e.g., 'brain tumor detection using AI')"
-                    required
-                >
-                <button type="submit" class="search-btn" id="searchBtn">
-                    🔍 Search
+        <div class="main-container">
+            <div class="feature-tabs">
+                <button class="tab-button active" data-tab="search">
+                    🔍 Search Research
                 </button>
-            </form>
+                <button class="tab-button" data-tab="upload">
+                    📄 Upload Document
+                </button>
+            </div>
 
-            <div class="options">
-                <div class="option-group">
-                    <label for="maxResults">Max Results:</label>
-                    <select id="maxResults">
-                        <option value="3">3</option>
-                        <option value="5" selected>5</option>
-                        <option value="10">10</option>
-                    </select>
+            <!-- Search Tab -->
+            <div class="tab-content active" id="searchTab">
+                <form class="search-form" id="searchForm">
+                    <input 
+                        type="text" 
+                        class="search-input" 
+                        id="searchInput" 
+                        placeholder="Enter your research topic (e.g., 'machine learning in healthcare')"
+                        required
+                    >
+                    <button type="submit" class="action-btn" id="searchBtn">
+                        🔍 Search Papers
+                    </button>
+                </form>
+
+                <div class="options">
+                    <div class="option-group">
+                        <label for="maxResults">Papers to analyze:</label>
+                        <select id="maxResults">
+                            <option value="3">3 papers</option>
+                            <option value="5" selected>5 papers</option>
+                            <option value="10">10 papers</option>
+                        </select>
+                    </div>
+                    <div class="option-group">
+                        <label>
+                            <input type="checkbox" id="podcastMode"> 
+                            Create Podcast Series
+                        </label>
+                    </div>
                 </div>
-                <div class="option-group">
-                    <label>
-                        <input type="checkbox" id="podcastMode"> 
-                        Podcast Mode
-                    </label>
+
+                <div class="research-report-section">
+                    <h3>📊 Generate Research Report</h3>
+                    <p>Create a comprehensive audio report from multiple research papers</p>
+                    <button class="action-btn secondary" id="researchReportBtn">
+                        🎙️ Generate Research Report
+                    </button>
                 </div>
             </div>
 
-            <div class="research-report-section">
-                <h3>📊 Research Report</h3>
-                <p>Generate a comprehensive audio research report from 10 relevant papers</p>
-                <button class="research-report-btn" id="researchReportBtn">
-                    🎙️ Generate Research Report
+            <!-- Upload Tab -->
+            <div class="tab-content" id="uploadTab">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📄</div>
+                    <div class="upload-text">Drop your PDF here or click to browse</div>
+                    <div class="upload-subtext">Supports PDF documents up to 10MB</div>
+                    <input type="file" class="file-input" id="fileInput" accept=".pdf">
+                </div>
+                
+                <div class="file-info" id="fileInfo">
+                    <div class="file-name" id="fileName"></div>
+                    <div class="file-size" id="fileSize"></div>
+                </div>
+
+                <div class="options" style="margin-top: 20px;">
+                    <div class="option-group">
+                        <label for="audioVoice">Voice Style:</label>
+                        <select id="audioVoice">
+                            <option value="professional">Professional</option>
+                            <option value="casual">Casual</option>
+                            <option value="academic">Academic</option>
+                        </select>
+                    </div>
+                    <div class="option-group">
+                        <label for="audioSpeed">Speed:</label>
+                        <select id="audioSpeed">
+                            <option value="0.8">Slow</option>
+                            <option value="1.0" selected>Normal</option>
+                            <option value="1.2">Fast</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="action-btn" id="convertBtn" style="margin-top: 20px; width: 100%;" disabled>
+                    🎙️ Convert to Podcast
                 </button>
             </div>
         </div>
@@ -580,7 +811,7 @@
     </div>
 
     <script>
-        class SecureScholar {
+        class DocuCast {
             constructor() {
                 this.currentAudio = null;
                 this.isPlaying = false;
@@ -588,11 +819,21 @@
                 this.currentPodcastIndex = 0;
                 this.isPodcastMode = false;
                 this.currentReport = null;
+                this.selectedFile = null;
+                this.currentTab = 'search';
                 
                 this.initializeEventListeners();
             }
 
             initializeEventListeners() {
+                // Tab switching
+                document.querySelectorAll('.tab-button').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        this.switchTab(e.target.dataset.tab);
+                    });
+                });
+
+                // Search functionality
                 document.getElementById('searchForm').addEventListener('submit', (e) => {
                     e.preventDefault();
                     this.performSearch();
@@ -608,6 +849,43 @@
 
                 document.getElementById('reportPlayBtn').addEventListener('click', () => {
                     this.playResearchReport();
+                });
+
+                // File upload functionality
+                const uploadArea = document.getElementById('uploadArea');
+                const fileInput = document.getElementById('fileInput');
+                const convertBtn = document.getElementById('convertBtn');
+
+                uploadArea.addEventListener('click', () => fileInput.click());
+                uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.add('dragover');
+                });
+                uploadArea.addEventListener('dragleave', () => {
+                    uploadArea.classList.remove('dragover');
+                });
+                uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('dragover');
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        this.handleFileSelect(files[0]);
+                    }
+                });
+
+                fileInput.addEventListener('change', (e) => {
+                    if (e.target.files.length > 0) {
+                        this.handleFileSelect(e.target.files[0]);
+                    }
+                });
+
+                convertBtn.addEventListener('click', () => {
+                    this.convertDocumentToPodcast();
+                });
+
+                // Click outside to clear results
+                document.addEventListener('click', (e) => {
+                    this.handleOutsideClick(e);
                 });
             }
 
@@ -1034,11 +1312,233 @@
             hideResearchReport() {
                 document.getElementById('researchReport').style.display = 'none';
             }
+
+            switchTab(tabName) {
+                // Update tab buttons
+                document.querySelectorAll('.tab-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+                // Update tab content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(`${tabName}Tab`).classList.add('active');
+
+                this.currentTab = tabName;
+            }
+
+            handleFileSelect(file) {
+                if (file.type !== 'application/pdf') {
+                    this.showError('Please select a PDF file');
+                    return;
+                }
+
+                if (file.size > 10 * 1024 * 1024) { // 10MB limit
+                    this.showError('File size must be less than 10MB');
+                    return;
+                }
+
+                this.selectedFile = file;
+                
+                // Update UI
+                document.getElementById('fileName').textContent = file.name;
+                document.getElementById('fileSize').textContent = this.formatFileSize(file.size);
+                document.getElementById('fileInfo').style.display = 'block';
+                document.getElementById('convertBtn').disabled = false;
+
+                // Update upload area
+                const uploadArea = document.getElementById('uploadArea');
+                uploadArea.style.borderColor = '#4ecdc4';
+                uploadArea.style.background = 'rgba(78, 205, 196, 0.1)';
+            }
+
+            formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            async convertDocumentToPodcast() {
+                if (!this.selectedFile) {
+                    this.showError('Please select a PDF file first');
+                    return;
+                }
+
+                this.showLoading();
+                this.hideError();
+
+                try {
+                    const formData = new FormData();
+                    formData.append('file', this.selectedFile);
+                    formData.append('voice', document.getElementById('audioVoice').value);
+                    formData.append('speed', document.getElementById('audioSpeed').value);
+
+                    const response = await fetch('/convert-document', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    this.displayDocumentPodcast(result);
+                    
+                } catch (error) {
+                    console.error('Document conversion error:', error);
+                    this.showError(`Document conversion failed: ${error.message}`);
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            displayDocumentPodcast(result) {
+                // Create a new results section for document podcast
+                const existingDocResults = document.getElementById('documentResults');
+                if (existingDocResults) {
+                    existingDocResults.remove();
+                }
+
+                const resultsDiv = document.createElement('div');
+                resultsDiv.id = 'documentResults';
+                resultsDiv.className = 'results';
+                resultsDiv.innerHTML = `
+                    <div class="results-header">
+                        <h2 class="results-title">📄 Document Podcast</h2>
+                        <div class="podcast-controls">
+                            <button class="play-btn" id="docPlayBtn">
+                                🎙️ Play Podcast
+                            </button>
+                        </div>
+                    </div>
+                    <div class="paper-card">
+                        <div class="paper-header">
+                            <div>
+                                <h3 class="paper-title">${result.title || this.selectedFile.name}</h3>
+                                <div class="paper-authors">Document converted to audio</div>
+                                <div class="paper-meta">
+                                    <span>📄 ${this.selectedFile.name}</span>
+                                    <span>⏱️ ${Math.round(result.duration / 60)} minutes</span>
+                                    <span>🎵 ${result.voice || 'Professional'} voice</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="paper-summary">
+                            ${result.summary || 'Your document has been successfully converted to a podcast format.'}
+                        </div>
+                        <div class="audio-controls">
+                            <button class="play-btn" data-audio-url="${result.audioUrl}">
+                                ▶️ Play Podcast
+                            </button>
+                            <div class="audio-info">
+                                Ready to listen
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Insert after the main container
+                document.querySelector('.main-container').insertAdjacentElement('afterend', resultsDiv);
+
+                // Add event listener for play button
+                resultsDiv.querySelector('.play-btn').addEventListener('click', (e) => {
+                    this.playAudio(result.audioUrl, e.target, 'document');
+                });
+
+                this.showResults();
+            }
+
+            handleOutsideClick(e) {
+                // Check if click is outside of results and main container
+                const results = document.querySelector('.results');
+                const mainContainer = document.querySelector('.main-container');
+                const researchReport = document.getElementById('researchReport');
+                
+                if (results && !results.contains(e.target) && !mainContainer.contains(e.target)) {
+                    this.clearResults();
+                }
+                
+                if (researchReport && !researchReport.contains(e.target) && !mainContainer.contains(e.target)) {
+                    this.hideResearchReport();
+                }
+            }
+
+            clearResults() {
+                // Add fade-out animation to results
+                const results = document.querySelector('.results');
+                const docResults = document.getElementById('documentResults');
+                
+                if (results) {
+                    results.classList.add('fade-out');
+                    setTimeout(() => {
+                        if (results && results.parentNode) {
+                            results.remove();
+                        }
+                    }, 300);
+                }
+
+                if (docResults) {
+                    docResults.classList.add('fade-out');
+                    setTimeout(() => {
+                        if (docResults && docResults.parentNode) {
+                            docResults.remove();
+                        }
+                    }, 300);
+                }
+
+                // Clear file selection
+                this.selectedFile = null;
+                const fileInput = document.getElementById('fileInput');
+                if (fileInput) {
+                    fileInput.value = '';
+                }
+
+                // Reset file info display
+                const fileInfo = document.getElementById('fileInfo');
+                if (fileInfo) {
+                    fileInfo.style.display = 'none';
+                }
+
+                // Reset convert button
+                const convertBtn = document.getElementById('convertBtn');
+                if (convertBtn) {
+                    convertBtn.disabled = true;
+                }
+
+                // Reset upload area styling
+                const uploadArea = document.getElementById('uploadArea');
+                if (uploadArea) {
+                    uploadArea.style.borderColor = '#d2d2d7';
+                    uploadArea.style.background = '#f5f5f7';
+                }
+
+                // Clear search input
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) {
+                    searchInput.value = '';
+                }
+
+                // Stop any playing audio
+                if (this.currentAudio) {
+                    this.currentAudio.pause();
+                    this.currentAudio = null;
+                }
+
+                // Reset podcast state
+                this.isPlaying = false;
+                this.podcastQueue = [];
+                this.currentPodcastIndex = 0;
+            }
         }
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', () => {
-            new SecureScholar();
+            new DocuCast();
         });
     </script>
 </body>

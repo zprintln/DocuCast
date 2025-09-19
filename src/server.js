@@ -3,6 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import multer from 'multer';
 import { runSearch, getSearchHistory, getPaperById } from './orchestrator.js';
 import { getAllPapers, searchPapers, getPaperStats } from './redisClient.js';
 import { cleanupOldAudio } from './tts.js';
@@ -15,6 +16,21 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Configure multer for file uploads
+const upload = multer({
+  dest: 'tmp/uploads/',
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are allowed'), false);
+    }
+  }
+});
 
 // Middleware
 app.use(cors());
@@ -218,6 +234,39 @@ app.post('/test-audio', async (req, res) => {
     res.status(500).json({ 
       success: false,
       error: 'Audio test failed', 
+      message: error.message 
+    });
+  }
+});
+
+// Convert document to podcast
+app.post('/convert-document', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ 
+        error: 'No file uploaded' 
+      });
+    }
+
+    const { voice = 'professional', speed = '1.0' } = req.body;
+    
+    console.log(`Document conversion request: ${req.file.originalname}`);
+    
+    // Import the document conversion function
+    const { convertDocumentToPodcast } = await import('./documentConverter.js');
+    
+    const result = await convertDocumentToPodcast(req.file, {
+      voice,
+      speed: parseFloat(speed),
+      useFallbacks: true
+    });
+    
+    res.json(result);
+    
+  } catch (error) {
+    console.error('Document conversion error:', error);
+    res.status(500).json({ 
+      error: 'Document conversion failed', 
       message: error.message 
     });
   }
