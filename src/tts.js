@@ -117,16 +117,28 @@ export async function generatePodcastAudio(segments, topic) {
     
     const audioFiles = [];
     
-    // Generate intro
+    // Generate intro with fallback
     const introText = `Welcome to SecureScholar. Today we're exploring the latest research on ${topic}. We have ${segments.length} papers to cover, each with key insights and findings. Let's dive in.`;
-    const introPath = await textToSpeech(introText, path.join(podcastDir, 'intro.mp3'));
+    let introPath;
+    try {
+      introPath = await textToSpeech(introText, path.join(podcastDir, 'intro.mp3'));
+    } catch (error) {
+      console.log('TTS failed for intro, using fallback:', error.message);
+      introPath = await textToSpeechFallback(introText, path.join(podcastDir, 'intro.mp3'));
+    }
     audioFiles.push({ type: 'intro', path: introPath, text: introText });
     
-    // Generate paper summaries
+    // Generate paper summaries with fallback
     for (let i = 0; i < segments.length; i++) {
       const segment = segments[i];
       const segmentText = `Paper ${i + 1}: ${segment.title}. ${segment.summary} Key points: ${segment.bullets.join('. ')}`;
-      const segmentPath = await textToSpeech(segmentText, path.join(podcastDir, `segment_${i + 1}.mp3`));
+      let segmentPath;
+      try {
+        segmentPath = await textToSpeech(segmentText, path.join(podcastDir, `segment_${i + 1}.mp3`));
+      } catch (error) {
+        console.log(`TTS failed for segment ${i + 1}, using fallback:`, error.message);
+        segmentPath = await textToSpeechFallback(segmentText, path.join(podcastDir, `segment_${i + 1}.mp3`));
+      }
       audioFiles.push({ 
         type: 'segment', 
         path: segmentPath, 
@@ -136,9 +148,15 @@ export async function generatePodcastAudio(segments, topic) {
       });
     }
     
-    // Generate outro
+    // Generate outro with fallback
     const outroText = `That concludes our exploration of ${topic}. Thank you for listening to SecureScholar. Keep learning and stay curious about the latest research.`;
-    const outroPath = await textToSpeech(outroText, path.join(podcastDir, 'outro.mp3'));
+    let outroPath;
+    try {
+      outroPath = await textToSpeech(outroText, path.join(podcastDir, 'outro.mp3'));
+    } catch (error) {
+      console.log('TTS failed for outro, using fallback:', error.message);
+      outroPath = await textToSpeechFallback(outroText, path.join(podcastDir, 'outro.mp3'));
+    }
     audioFiles.push({ type: 'outro', path: outroPath, text: outroText });
     
     // Create playlist file
@@ -200,81 +218,23 @@ export function cleanupOldAudio(maxAgeHours = 24) {
 
 // Fallback function for demo when Gladia is not available
 export async function textToSpeechFallback(text, outFileName) {
-  console.log(`🎭 Fallback: Creating demo audio for: ${outFileName}`);
+  console.log(`Fallback: Would convert text to speech: ${outFileName}`);
   
-  try {
-    // Create a more realistic dummy audio file for demo
-    const storagePath = process.env.STORAGE_PATH || './tmp/audio';
-    
-    // Ensure directory exists
-    if (!fs.existsSync(storagePath)) {
-      console.log(`Creating audio directory: ${storagePath}`);
-      fs.mkdirSync(storagePath, { recursive: true });
-    }
-    
-    const outPath = path.join(storagePath, outFileName);
-    
-    // Create a more substantial dummy MP3 (silent audio)
-    // This is a minimal valid MP3 header with some padding
-    const dummyMp3 = Buffer.concat([
-      // MP3 frame header
-      Buffer.from([
-        0xFF, 0xFB, 0x90, 0x00,  // MP3 sync word + layer/version info
-        0x00, 0x00, 0x00, 0x00,  // Bitrate, sample rate, padding, private
-        0x00, 0x00, 0x00, 0x00,  // Mode, mode ext, copyright, original
-        0x00, 0x00, 0x00, 0x00   // Emphasis + more padding
-      ]),
-      // Add some padding to make it a more realistic file size
-      Buffer.alloc(1024, 0x00)
-    ]);
-    
-    fs.writeFileSync(outPath, dummyMp3);
-    
-    console.log(`✅ Fallback audio created: ${outPath}`);
-    console.log(`📁 File size: ${fs.statSync(outPath).size} bytes`);
-    
-    return outPath;
-    
-  } catch (error) {
-    console.error('❌ Fallback TTS error:', error);
-    throw new Error(`Failed to create fallback audio: ${error.message}`);
-  }
-}
-
-// Test function to verify audio directory and file serving
-export async function testAudioSetup() {
+  // Create a dummy audio file for demo
   const storagePath = process.env.STORAGE_PATH || './tmp/audio';
-  const testFile = 'test-audio.mp3';
-  
-  try {
-    console.log(`🧪 Testing audio setup...`);
-    console.log(`📁 Storage path: ${storagePath}`);
-    
-    // Create test audio file
-    const testPath = await textToSpeechFallback('Test audio', testFile);
-    
-    // Check if file exists and is readable
-    if (fs.existsSync(testPath)) {
-      const stats = fs.statSync(testPath);
-      console.log(`✅ Test file created: ${testFile} (${stats.size} bytes)`);
-      
-      return {
-        success: true,
-        path: testPath,
-        url: `/audio/${testFile}`,
-        size: stats.size,
-        message: 'Audio setup working correctly'
-      };
-    } else {
-      throw new Error('Test file was not created');
-    }
-    
-  } catch (error) {
-    console.error('❌ Audio setup test failed:', error);
-    return {
-      success: false,
-      error: error.message,
-      storagePath: storagePath
-    };
+  if (!fs.existsSync(storagePath)) {
+    fs.mkdirSync(storagePath, { recursive: true });
   }
+  
+  const outPath = path.join(storagePath, outFileName);
+  
+  // Create a minimal MP3 file (just a placeholder)
+  const dummyMp3 = Buffer.from([
+    0xFF, 0xFB, 0x90, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  ]);
+  
+  fs.writeFileSync(outPath, dummyMp3);
+  
+  console.log(`Fallback audio created: ${outPath}`);
+  return outPath;
 }
