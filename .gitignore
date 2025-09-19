@@ -85,4 +85,4 @@ test-results/
 coverage/
 
 # Redis dumps (if running locally)
-dump.rdb
+dump.rdbtmp/
