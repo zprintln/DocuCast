@@ -1,35 +1,60 @@
-// src/summarizer.js
-import Anthropic from '@anthropic-ai/sdk';
-import OpenAI from 'openai';
 import dotenv from 'dotenv';
+import OpenAI from 'openai';
 
 dotenv.config();
 
-const anthropic = new Anthropic({
-  apiKey: process.env.LLM_API_KEY,
-});
+let openaiClient = null;
 
-const openai = new OpenAI({
-  apiKey: process.env.LLM_API_KEY,
-});
+// Initialize OpenAI client
+function getOpenAIClient() {
+  if (!openaiClient && process.env.OPENAI_API_KEY) {
+    openaiClient = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY
+    });
+    console.log('✅ OpenAI client initialized');
+  }
+  return openaiClient;
+}
 
 export async function summarizePaper({ title, abstract, text }) {
+  console.log(`🤖 Summarizing: "${title}"`);
+  
   try {
-    const prompt = createSummarizationPrompt(title, abstract, text);
+    const client = getOpenAIClient();
     
-    let response;
-    
-    if (process.env.LLM_PROVIDER === 'anthropic') {
-      response = await callAnthropic(prompt);
-    } else {
-      response = await callOpenAI(prompt);
+    if (!client) {
+      console.log('⚠️ No OpenAI API key, using fallback');
+      return summarizePaperFallback({ title, abstract, text });
     }
     
-    return parseSummaryResponse(response);
+    const prompt = createSummarizationPrompt(title, abstract, text);
+    
+    const response = await client.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a research paper summarizer. Always respond with valid JSON in the exact format requested.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      max_tokens: 500,
+      temperature: 0.3,
+      response_format: { type: 'json_object' }
+    });
+    
+    const content = response.choices[0].message.content;
+    console.log('✅ OpenAI summary generated');
+    
+    return parseSummaryResponse(content);
     
   } catch (error) {
-    console.error('Summarization error:', error);
-    throw new Error(`Failed to summarize paper: ${error.message}`);
+    console.error('❌ Summarization error:', error.message);
+    console.log('🔄 Falling back to basic summary');
+    return summarizePaperFallback({ title, abstract, text });
   }
 }
 
@@ -58,61 +83,10 @@ Return JSON only in this exact format:
 }`;
 }
 
-async function callAnthropic(prompt) {
-  try {
-    const response = await anthropic.messages.create({
-      model: 'claude-3-haiku-20240307',
-      max_tokens: 1000,
-      temperature: 0.2,
-      messages: [
-        {
-          role: 'user',
-          content: prompt
-        }
-      ]
-    });
-    
-    return response.content[0].text;
-    
-  } catch (error) {
-    console.error('Anthropic API error:', error);
-    throw error;
-  }
-}
-
-async function callOpenAI(prompt) {
-  try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a concise research summarizer. Always return valid JSON.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.2,
-      max_tokens: 1000
-    });
-    
-    return response.choices[0].message.content;
-    
-  } catch (error) {
-    console.error('OpenAI API error:', error);
-    throw error;
-  }
-}
-
 function parseSummaryResponse(response) {
   try {
-    // Extract JSON from response (in case there's extra text)
-    const jsonMatch = response.match(/\{[\s\S]*\}/);
-    const jsonStr = jsonMatch ? jsonMatch[0] : response;
-    
-    const parsed = JSON.parse(jsonStr);
+    // Parse the JSON response
+    const parsed = JSON.parse(response);
     
     // Validate required fields
     if (!parsed.summary || !parsed.bullets || !Array.isArray(parsed.bullets)) {
@@ -120,16 +94,17 @@ function parseSummaryResponse(response) {
     }
     
     // Ensure bullets array has exactly 3 items
-    if (parsed.bullets.length !== 3) {
-      // Pad or truncate as needed
-      while (parsed.bullets.length < 3) {
-        parsed.bullets.push('Not specified');
-      }
-      parsed.bullets = parsed.bullets.slice(0, 3);
+    while (parsed.bullets.length < 3) {
+      parsed.bullets.push('Additional details in paper');
     }
+    parsed.bullets = parsed.bullets.slice(0, 3);
     
     // Ensure importance is a number between 0-10
     parsed.importance = Math.max(0, Math.min(10, parseInt(parsed.importance) || 5));
+    
+    // Add metadata
+    parsed.llmProvider = 'openai';
+    parsed.processingTime = new Date().toISOString();
     
     return parsed;
     
@@ -143,30 +118,44 @@ function parseSummaryResponse(response) {
         "Novelty: New technique or framework",
         "Key Result: Significant improvement or discovery"
       ],
-      importance: 5
+      importance: 5,
+      llmProvider: 'fallback',
+      processingTime: new Date().toISOString()
     };
   }
 }
 
 export async function generatePodcastIntro(topic, paperCount) {
-  const prompt = `Create a brief podcast introduction for a research summary about "${topic}". 
+  console.log(`🎙️ Generating podcast intro for: "${topic}"`);
   
-  We have ${paperCount} research papers to cover. 
-  
-  Make it engaging and professional, like a research podcast host would introduce the topic.
-  
-  Keep it under 100 words and make it sound natural for audio.`;
-
   try {
-    let response;
+    const client = getOpenAIClient();
     
-    if (process.env.LLM_PROVIDER === 'anthropic') {
-      response = await callAnthropic(prompt);
-    } else {
-      response = await callOpenAI(prompt);
+    if (!client) {
+      return `Welcome to SecureScholar. Today we're exploring the latest research on ${topic}. We have ${paperCount} papers to cover, each with key insights and findings. Let's dive in.`;
     }
     
-    return response.trim();
+    const prompt = `Create a brief podcast introduction for a research summary about "${topic}". 
+    
+We have ${paperCount} research papers to cover. 
+
+Make it engaging and professional, like a research podcast host would introduce the topic.
+
+Keep it under 100 words and make it sound natural for audio.`;
+
+    const response = await client.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      max_tokens: 200,
+      temperature: 0.7
+    });
+    
+    return response.choices[0].message.content.trim();
     
   } catch (error) {
     console.error('Podcast intro generation error:', error);
@@ -175,22 +164,34 @@ export async function generatePodcastIntro(topic, paperCount) {
 }
 
 export async function generatePodcastOutro(topic) {
-  const prompt = `Create a brief podcast outro for a research summary about "${topic}". 
+  console.log(`🎙️ Generating podcast outro for: "${topic}"`);
   
-  Thank the listeners and encourage them to explore more research.
-  
-  Keep it under 50 words and make it sound natural for audio.`;
-
   try {
-    let response;
+    const client = getOpenAIClient();
     
-    if (process.env.LLM_PROVIDER === 'anthropic') {
-      response = await callAnthropic(prompt);
-    } else {
-      response = await callOpenAI(prompt);
+    if (!client) {
+      return `That concludes our exploration of ${topic}. Thank you for listening to SecureScholar. Keep learning and stay curious about the latest research.`;
     }
     
-    return response.trim();
+    const prompt = `Create a brief podcast outro for a research summary about "${topic}". 
+    
+Thank the listeners and encourage them to explore more research.
+
+Keep it under 50 words and make it sound natural for audio.`;
+
+    const response = await client.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      max_tokens: 100,
+      temperature: 0.7
+    });
+    
+    return response.choices[0].message.content.trim();
     
   } catch (error) {
     console.error('Podcast outro generation error:', error);
@@ -200,15 +201,61 @@ export async function generatePodcastOutro(topic) {
 
 // Fallback function for demo when LLM APIs are not available
 export async function summarizePaperFallback({ title, abstract, text }) {
-  console.log('Using fallback summarization for demo');
+  console.log('🎭 Using fallback summarization for demo');
   
   return {
-    summary: `This research paper titled "${title}" presents important findings in the field. The work demonstrates significant contributions through innovative methodology and experimental validation.`,
+    summary: `This research paper titled "${title}" presents important findings in the field. ${abstract ? abstract.substring(0, 100) + '...' : 'The work demonstrates significant contributions through innovative methodology and experimental validation.'}`,
     bullets: [
-      `Method: Advanced computational approach used in ${title}`,
-      `Novelty: New technique or framework presented`,
+      `Method: Computational approach focusing on ${title.split(' ').slice(-2).join(' ')}`,
+      `Novelty: New technique or framework presented in this study`,
       `Key Result: Significant improvement or discovery achieved`
     ],
-    importance: Math.floor(Math.random() * 4) + 6 // Random importance 6-9
+    importance: Math.floor(Math.random() * 4) + 6, // Random importance 6-9
+    llmProvider: 'fallback',
+    processingTime: new Date().toISOString(),
+    note: 'Add OPENAI_API_KEY for AI-powered summaries'
   };
+}
+
+// Health check function
+export async function healthCheck() {
+  const status = {
+    service: 'Summarization',
+    provider: 'OpenAI only'
+  };
+  
+  if (!process.env.OPENAI_API_KEY) {
+    return {
+      ...status,
+      status: 'missing-key',
+      message: 'OPENAI_API_KEY not found in environment',
+      fallbackAvailable: true
+    };
+  }
+  
+  try {
+    const client = getOpenAIClient();
+    
+    // Test API call
+    const response = await client.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [{ role: 'user', content: 'Hello' }],
+      max_tokens: 5
+    });
+    
+    return {
+      ...status,
+      status: 'healthy',
+      model: 'gpt-3.5-turbo',
+      responseTime: 'OK'
+    };
+    
+  } catch (error) {
+    return {
+      ...status,
+      status: 'error',
+      error: error.message,
+      fallbackAvailable: true
+    };
+  }
 }
