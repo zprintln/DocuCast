@@ -287,6 +287,24 @@
             padding: 40px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             border: 1px solid rgba(0, 0, 0, 0.04);
+            position: relative;
+        }
+
+        .results::before {
+            content: "Click outside to clear results";
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            font-size: 12px;
+            color: #86868b;
+            opacity: 0.7;
+            font-style: italic;
+        }
+
+        .results.fade-out {
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
         }
 
         .results-header {
@@ -864,6 +882,11 @@
                 convertBtn.addEventListener('click', () => {
                     this.convertDocumentToPodcast();
                 });
+
+                // Click outside to clear results
+                document.addEventListener('click', (e) => {
+                    this.handleOutsideClick(e);
+                });
             }
 
             async performSearch() {
@@ -1428,6 +1451,88 @@
                 });
 
                 this.showResults();
+            }
+
+            handleOutsideClick(e) {
+                // Check if click is outside of results and main container
+                const results = document.querySelector('.results');
+                const mainContainer = document.querySelector('.main-container');
+                const researchReport = document.getElementById('researchReport');
+                
+                if (results && !results.contains(e.target) && !mainContainer.contains(e.target)) {
+                    this.clearResults();
+                }
+                
+                if (researchReport && !researchReport.contains(e.target) && !mainContainer.contains(e.target)) {
+                    this.hideResearchReport();
+                }
+            }
+
+            clearResults() {
+                // Add fade-out animation to results
+                const results = document.querySelector('.results');
+                const docResults = document.getElementById('documentResults');
+                
+                if (results) {
+                    results.classList.add('fade-out');
+                    setTimeout(() => {
+                        if (results && results.parentNode) {
+                            results.remove();
+                        }
+                    }, 300);
+                }
+
+                if (docResults) {
+                    docResults.classList.add('fade-out');
+                    setTimeout(() => {
+                        if (docResults && docResults.parentNode) {
+                            docResults.remove();
+                        }
+                    }, 300);
+                }
+
+                // Clear file selection
+                this.selectedFile = null;
+                const fileInput = document.getElementById('fileInput');
+                if (fileInput) {
+                    fileInput.value = '';
+                }
+
+                // Reset file info display
+                const fileInfo = document.getElementById('fileInfo');
+                if (fileInfo) {
+                    fileInfo.style.display = 'none';
+                }
+
+                // Reset convert button
+                const convertBtn = document.getElementById('convertBtn');
+                if (convertBtn) {
+                    convertBtn.disabled = true;
+                }
+
+                // Reset upload area styling
+                const uploadArea = document.getElementById('uploadArea');
+                if (uploadArea) {
+                    uploadArea.style.borderColor = '#d2d2d7';
+                    uploadArea.style.background = '#f5f5f7';
+                }
+
+                // Clear search input
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) {
+                    searchInput.value = '';
+                }
+
+                // Stop any playing audio
+                if (this.currentAudio) {
+                    this.currentAudio.pause();
+                    this.currentAudio = null;
+                }
+
+                // Reset podcast state
+                this.isPlaying = false;
+                this.podcastQueue = [];
+                this.currentPodcastIndex = 0;
             }
         }
 
