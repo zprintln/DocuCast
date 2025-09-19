@@ -272,6 +272,55 @@ app.post('/convert-document', upload.single('file'), async (req, res) => {
   }
 });
 
+// Generate audio for individual papers
+app.post('/generate-audio', async (req, res) => {
+  try {
+    const { text, title } = req.body;
+    
+    if (!text) {
+      return res.status(400).json({ 
+        error: 'Text is required' 
+      });
+    }
+    
+    console.log(`Audio generation request: ${title || 'Untitled'}`);
+    
+    // Import TTS functions
+    const { textToSpeech, textToSpeechFallback } = await import('./tts.js');
+    const { v4 as uuidv4 } = await import('uuid');
+    
+    // Generate unique filename
+    const audioId = uuidv4();
+    const audioFileName = `paper_${audioId}.mp3`;
+    
+    let audioPath;
+    try {
+      audioPath = await textToSpeech(text, audioFileName);
+    } catch (error) {
+      console.log('TTS failed, using fallback:', error.message);
+      audioPath = await textToSpeechFallback(text, audioFileName);
+    }
+    
+    // Estimate duration (rough calculation: 150 words per minute)
+    const wordCount = text.split(/\s+/).length;
+    const duration = Math.round((wordCount / 150) * 60);
+    
+    res.json({
+      audioUrl: `/audio/${audioFileName}`,
+      audioPath: audioPath,
+      duration: duration,
+      title: title || 'Generated Audio'
+    });
+    
+  } catch (error) {
+    console.error('Audio generation error:', error);
+    res.status(500).json({ 
+      error: 'Audio generation failed', 
+      message: error.message 
+    });
+  }
+});
+
 // Generate RSS feed for podcast
 app.get('/podcast/:topic.rss', async (req, res) => {
   try {
