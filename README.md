@@ -1,16 +1,17 @@
-# 🔬 SecureScholar - Voice Research Assistant
+# 🎙️ DocuCast - Turn Documents into Podcasts
 
-A powerful AI-powered research assistant that finds, summarizes, and converts academic papers into audio content. Built for the MCP Hackathon using Apify MCP server and cutting-edge AI tools.
+A powerful AI-powered platform that transforms any document into engaging podcast content. Search for research papers or upload your own documents and convert them into professional audio experiences. Built for the MCP Hackathon using Apify MCP server and cutting-edge AI tools.
 
 ## 🚀 Features
 
-- **🔍 Smart Research Discovery**: Uses Apify's Google Scholar integration to find relevant papers
+- **🔍 Research Search**: Find and analyze academic papers using Apify's Google Scholar integration
+- **📄 Document Upload**: Upload PDF documents and convert them to podcast format
+- **🎧 Voice Conversion**: Transform any text into natural speech using Gladia TTS
+- **🎙️ Podcast Generation**: Create engaging podcast content from documents
 - **🛡️ Security First**: Integrated with Horizon3.ai for security validation
-- **📝 AI Summarization**: Converts complex research into digestible summaries using Claude/OpenAI
-- **🎧 Voice Conversion**: Transforms text summaries into natural speech using Gladia TTS
-- **📊 Vector Search**: Stores and searches papers using embeddings and Redis
-- **🎙️ Podcast Mode**: Creates sequential audio playlists for research topics
-- **🌐 Web Interface**: Beautiful, responsive demo UI
+- **📝 AI Summarization**: Convert complex content into digestible summaries using Claude/OpenAI
+- **🎵 Voice Customization**: Choose from different voice styles and speeds
+- **🌐 Modern UI**: Beautiful, responsive interface with drag-and-drop upload
 
 ## 🏗️ Architecture
 
