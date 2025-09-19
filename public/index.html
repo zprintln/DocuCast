@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureScholar - Voice Research Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .search-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .search-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .search-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .options {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .option-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .option-group label {
+            font-weight: 500;
+            color: #555;
+        }
+
+        .option-group input, .option-group select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .results-title {
+            font-size: 1.5rem;
+            color: #333;
+        }
+
+        .podcast-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .podcast-btn {
+            padding: 10px 20px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        .podcast-btn:hover {
+            background: #218838;
+        }
+
+        .podcast-btn.playing {
+            background: #dc3545;
+        }
+
+        .paper-card {
+            border: 1px solid #e1e5e9;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .paper-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .paper-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .paper-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .paper-authors {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .paper-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .importance-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .paper-summary {
+            margin: 20px 0;
+            line-height: 1.6;
+            color: #555;
+        }
+
+        .paper-bullets {
+            margin: 15px 0;
+        }
+
+        .paper-bullets ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .paper-bullets li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+            color: #666;
+        }
+
+        .paper-bullets li:before {
+            content: "▶";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-size: 0.8rem;
+        }
+
+        .audio-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .play-btn {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.3s;
+        }
+
+        .play-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .play-btn.playing {
+            background: #dc3545;
+        }
+
+        .audio-info {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+        }
+
+        .stats {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .search-form {
+                flex-direction: column;
+            }
+
+            .options {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .paper-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .paper-meta {
+                flex-wrap: wrap;
+            }
+
+            .audio-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔬 SecureScholar</h1>
+            <p>Voice Research Assistant powered by AI</p>
+        </div>
+
+        <div class="search-container">
+            <form class="search-form" id="searchForm">
+                <input 
+                    type="text" 
+                    class="search-input" 
+                    id="searchInput" 
+                    placeholder="Enter your research topic (e.g., 'brain tumor detection using AI')"
+                    required
+                >
+                <button type="submit" class="search-btn" id="searchBtn">
+                    🔍 Search
+                </button>
+            </form>
+
+            <div class="options">
+                <div class="option-group">
+                    <label for="maxResults">Max Results:</label>
+                    <select id="maxResults">
+                        <option value="3">3</option>
+                        <option value="5" selected>5</option>
+                        <option value="10">10</option>
+                    </select>
+                </div>
+                <div class="option-group">
+                    <label>
+                        <input type="checkbox" id="podcastMode"> 
+                        Podcast Mode
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Searching for research papers and generating summaries...</p>
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="results" class="results" style="display: none;">
+            <div class="results-header">
+                <h2 class="results-title" id="resultsTitle">Search Results</h2>
+                <div class="podcast-controls">
+                    <button class="podcast-btn" id="podcastBtn" style="display: none;">
+                        🎧 Play All
+                    </button>
+                </div>
+            </div>
+            <div id="papersList"></div>
+            <div id="stats" class="stats" style="display: none;">
+                <div class="stats-grid" id="statsGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class SecureScholar {
+            constructor() {
+                this.currentAudio = null;
+                this.isPlaying = false;
+                this.podcastQueue = [];
+                this.currentPodcastIndex = 0;
+                this.isPodcastMode = false;
+                
+                this.initializeEventListeners();
+            }
+
+            initializeEventListeners() {
+                document.getElementById('searchForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.performSearch();
+                });
+
+                document.getElementById('podcastBtn').addEventListener('click', () => {
+                    this.togglePodcast();
+                });
+            }
+
+            async performSearch() {
+                const query = document.getElementById('searchInput').value.trim();
+                const maxResults = parseInt(document.getElementById('maxResults').value);
+                const podcastMode = document.getElementById('podcastMode').checked;
+
+                if (!query) return;
+
+                this.showLoading();
+                this.hideError();
+                this.hideResults();
+
+                try {
+                    const response = await fetch('/search', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            query,
+                            maxResults,
+                            podcastMode
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    this.displayResults(data);
+                    
+                } catch (error) {
+                    console.error('Search error:', error);
+                    this.showError(`Search failed: ${error.message}`);
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            displayResults(data) {
+                this.podcastQueue = data.papers || [];
+                this.isPodcastMode = data.podcast ? true : false;
+
+                document.getElementById('resultsTitle').textContent = 
+                    `Search Results for "${data.query}" (${data.totalPapers} papers)`;
+
+                const papersList = document.getElementById('papersList');
+                papersList.innerHTML = '';
+
+                data.papers.forEach((paper, index) => {
+                    const paperCard = this.createPaperCard(paper, index);
+                    papersList.appendChild(paperCard);
+                });
+
+                // Show podcast button if podcast mode is enabled
+                if (this.isPodcastMode && data.podcast) {
+                    document.getElementById('podcastBtn').style.display = 'block';
+                }
+
+                this.showResults();
+                this.updateStats(data);
+            }
+
+            createPaperCard(paper, index) {
+                const card = document.createElement('div');
+                card.className = 'paper-card';
+                card.innerHTML = `
+                    <div class="paper-header">
+                        <div>
+                            <h3 class="paper-title">${paper.title}</h3>
+                            <div class="paper-authors">${paper.authors ? paper.authors.join(', ') : 'Unknown Authors'}</div>
+                            <div class="paper-meta">
+                                ${paper.venue ? `<span>📖 ${paper.venue}</span>` : ''}
+                                ${paper.publishedDate ? `<span>📅 ${paper.publishedDate}</span>` : ''}
+                                ${paper.citations ? `<span>📊 ${paper.citations} citations</span>` : ''}
+                                <span class="importance-badge">Importance: ${paper.importance}/10</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="paper-summary">
+                        ${paper.summary}
+                    </div>
+                    
+                    <div class="paper-bullets">
+                        <ul>
+                            ${paper.bullets.map(bullet => `<li>${bullet}</li>`).join('')}
+                        </ul>
+                    </div>
+                    
+                    <div class="audio-controls">
+                        <button class="play-btn" data-paper-id="${paper.id}" data-audio-url="${paper.audioUrl}">
+                            ▶️ Play Summary
+                        </button>
+                        <div class="audio-info">
+                            Audio summary available
+                        </div>
+                    </div>
+                `;
+
+                // Add click handler for play button
+                const playBtn = card.querySelector('.play-btn');
+                playBtn.addEventListener('click', () => {
+                    this.playAudio(paper.audioUrl, playBtn, paper.id);
+                });
+
+                return card;
+            }
+
+            async playAudio(audioUrl, button, paperId) {
+                try {
+                    // Stop current audio if playing
+                    if (this.currentAudio) {
+                        this.currentAudio.pause();
+                        this.currentAudio = null;
+                    }
+
+                    // Reset all play buttons
+                    document.querySelectorAll('.play-btn').forEach(btn => {
+                        btn.textContent = '▶️ Play Summary';
+                        btn.classList.remove('playing');
+                    });
+
+                    // Set up new audio
+                    this.currentAudio = new Audio(audioUrl);
+                    this.isPlaying = true;
+                    button.textContent = '⏸️ Pause';
+                    button.classList.add('playing');
+
+                    this.currentAudio.addEventListener('ended', () => {
+                        button.textContent = '▶️ Play Summary';
+                        button.classList.remove('playing');
+                        this.isPlaying = false;
+                        this.currentAudio = null;
+                    });
+
+                    this.currentAudio.addEventListener('error', (e) => {
+                        console.error('Audio error:', e);
+                        button.textContent = '❌ Error';
+                        button.classList.remove('playing');
+                        this.isPlaying = false;
+                        this.currentAudio = null;
+                    });
+
+                    await this.currentAudio.play();
+
+                } catch (error) {
+                    console.error('Playback error:', error);
+                    button.textContent = '❌ Error';
+                    button.classList.remove('playing');
+                }
+            }
+
+            togglePodcast() {
+                const btn = document.getElementById('podcastBtn');
+                
+                if (this.isPlaying) {
+                    this.stopPodcast();
+                    btn.textContent = '🎧 Play All';
+                    btn.classList.remove('playing');
+                } else {
+                    this.startPodcast();
+                    btn.textContent = '⏹️ Stop';
+                    btn.classList.add('playing');
+                }
+            }
+
+            startPodcast() {
+                if (this.podcastQueue.length === 0) return;
+
+                this.currentPodcastIndex = 0;
+                this.playNextInPodcast();
+            }
+
+            playNextInPodcast() {
+                if (this.currentPodcastIndex >= this.podcastQueue.length) {
+                    this.stopPodcast();
+                    return;
+                }
+
+                const paper = this.podcastQueue[this.currentPodcastIndex];
+                const playBtn = document.querySelector(`[data-paper-id="${paper.id}"]`);
+                
+                if (playBtn) {
+                    playBtn.click();
+                    
+                    // Set up next track
+                    if (this.currentAudio) {
+                        this.currentAudio.addEventListener('ended', () => {
+                            this.currentPodcastIndex++;
+                            setTimeout(() => this.playNextInPodcast(), 1000);
+                        }, { once: true });
+                    }
+                }
+            }
+
+            stopPodcast() {
+                if (this.currentAudio) {
+                    this.currentAudio.pause();
+                    this.currentAudio = null;
+                }
+                this.isPlaying = false;
+                this.currentPodcastIndex = 0;
+            }
+
+            updateStats(data) {
+                const statsGrid = document.getElementById('statsGrid');
+                statsGrid.innerHTML = `
+                    <div class="stat-item">
+                        <div class="stat-value">${data.totalPapers}</div>
+                        <div class="stat-label">Papers Found</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${data.papers.filter(p => p.audioUrl).length}</div>
+                        <div class="stat-label">Audio Summaries</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${data.papers.reduce((sum, p) => sum + (p.importance || 0), 0) / data.papers.length}</div>
+                        <div class="stat-label">Avg Importance</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${data.podcast ? 'Yes' : 'No'}</div>
+                        <div class="stat-label">Podcast Mode</div>
+                    </div>
+                `;
+                document.getElementById('stats').style.display = 'block';
+            }
+
+            showLoading() {
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('searchBtn').disabled = true;
+            }
+
+            hideLoading() {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('searchBtn').disabled = false;
+            }
+
+            showError(message) {
+                const errorDiv = document.getElementById('error');
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+            }
+
+            hideError() {
+                document.getElementById('error').style.display = 'none';
+            }
+
+            showResults() {
+                document.getElementById('results').style.display = 'block';
+            }
+
+            hideResults() {
+                document.getElementById('results').style.display = 'none';
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            new SecureScholar();
+        });
+    </script>
+</body>
+</html>
