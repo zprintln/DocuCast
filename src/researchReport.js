@@ -1,4 +1,3 @@
-// src/researchReport.js
 import { runSearch } from './orchestrator.js';
 import { textToSpeech, textToSpeechFallback } from './tts.js';
 import { v4 as uuidv4 } from 'uuid';

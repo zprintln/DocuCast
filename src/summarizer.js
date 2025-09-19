@@ -73,7 +73,7 @@ Task:
 
 Return JSON only in this exact format:
 {
-  "summary": "Brief 2-sentence summary in plain English",
+  "summary": "Brief 2-4-sentence summary in plain English highlighting the paper's key contribution",
   "bullets": [
     "Method: Description of the approach used",
     "Novelty: What's new or innovative about this work", 
