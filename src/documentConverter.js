@@ -1,6 +1,6 @@
 import { fetchPdfText, extractRelevantSections } from './pdfParser.js';
 import { summarizePaper, summarizePaperFallback } from './summarizer.js';
-import { textToSpeech, textToSpeechFallback } from './tts.js';
+import { textToSpeech, textToSpeechFallback, textToSpeechWithOptions } from './tts.js';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
@@ -70,11 +70,16 @@ export async function convertDocumentToPodcast(file, options = {}) {
         speed: speed
       });
     } catch (error) {
-      console.log('TTS failed, using fallback:', error.message);
-      if (useFallbacks) {
-        audioPath = await textToSpeechFallback(podcastContent, audioFileName);
-      } else {
-        throw error;
+      console.log('TTS with options failed, trying basic TTS:', error.message);
+      try {
+        audioPath = await textToSpeech(podcastContent, audioFileName);
+      } catch (error2) {
+        console.log('Basic TTS failed, using fallback:', error2.message);
+        if (useFallbacks) {
+          audioPath = await textToSpeechFallback(podcastContent, audioFileName);
+        } else {
+          throw error2;
+        }
       }
     }
     
@@ -170,31 +175,3 @@ This document serves as a valuable resource for anyone interested in understandi
   return sampleContent;
 }
 
-// Fallback function for TTS with options
-async function textToSpeechWithOptions(text, outFileName, options = {}) {
-  try {
-    console.log(`Converting text to speech with options: ${outFileName}`);
-    
-    // Ensure storage directory exists
-    const storagePath = process.env.STORAGE_PATH || './tmp/audio';
-    if (!fs.existsSync(storagePath)) {
-      fs.mkdirSync(storagePath, { recursive: true });
-    }
-    
-    const outPath = path.join(storagePath, outFileName);
-    
-    // For demo purposes, create a placeholder audio file
-    const dummyMp3 = Buffer.from([
-      0xFF, 0xFB, 0x90, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-    ]);
-    
-    fs.writeFileSync(outPath, dummyMp3);
-    
-    console.log(`Fallback audio created: ${outPath}`);
-    return outPath;
-    
-  } catch (error) {
-    console.error('TTS with options error:', error);
-    throw new Error(`Failed to convert text to speech with options: ${error.message}`);
-  }
-}

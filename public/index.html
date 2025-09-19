@@ -468,6 +468,10 @@
             background: #ff3b30;
         }
 
+        .play-btn.resuming {
+            background: #34c759;
+        }
+
         .audio-info {
             font-size: 15px;
             color: #86868b;
@@ -989,6 +993,7 @@
         class DocuCast {
             constructor() {
                 this.currentAudio = null;
+                this.currentButton = null;
                 this.isPlaying = false;
                 this.podcastQueue = [];
                 this.currentPodcastIndex = 0;
@@ -1180,16 +1185,32 @@
 
             async playAudio(audioUrl, button, paperId) {
                 try {
-                    // Stop current audio if playing
+                    // Check if this button is currently playing/paused
+                    if (button.classList.contains('playing') || button.classList.contains('resuming') || 
+                        button.textContent.includes('Pause') || button.textContent.includes('Resume')) {
+                        // Same button clicked - toggle pause/resume
+                        if (this.isPlaying) {
+                            this.pauseAudio();
+                            return;
+                        } else {
+                            this.resumeAudio();
+                            return;
+                        }
+                    }
+
+                    // Different audio or no current audio - stop current and start new
                     if (this.currentAudio) {
-                        this.currentAudio.pause();
-                        this.currentAudio = null;
+                        this.stopAudio();
                     }
 
                     // Reset all play buttons
                     document.querySelectorAll('.play-btn').forEach(btn => {
-                        btn.textContent = '▶️ Play Summary';
-                        btn.classList.remove('playing');
+                        if (btn.textContent.includes('Play Podcast')) {
+                            btn.textContent = '🎙️ Play Podcast';
+                        } else {
+                            btn.textContent = '▶️ Play Summary';
+                        }
+                        btn.classList.remove('playing', 'resuming');
                     });
 
                     // Check if audio URL exists, if not generate it
@@ -1223,34 +1244,66 @@
 
                     // Set up new audio
                     this.currentAudio = new Audio(finalAudioUrl);
+                    this.currentButton = button;
                     this.isPlaying = true;
                     button.textContent = '⏸️ Pause';
                     button.classList.add('playing');
 
                     this.currentAudio.addEventListener('ended', () => {
-                        button.textContent = '▶️ Play Summary';
-                        button.classList.remove('playing');
-                        this.isPlaying = false;
-                        this.currentAudio = null;
+                        this.stopAudio();
                     });
 
                     this.currentAudio.addEventListener('error', (e) => {
                         console.error('Audio error:', e);
+                        this.stopAudio();
                         button.textContent = '❌ Error';
-                        button.classList.remove('playing');
-                        this.isPlaying = false;
-                        this.currentAudio = null;
                     });
 
                     await this.currentAudio.play();
 
                 } catch (error) {
                     console.error('Playback error:', error);
+                    this.stopAudio();
                     button.textContent = '❌ Error';
-                    button.classList.remove('playing');
+                }
+            }
+
+            pauseAudio() {
+                if (this.currentAudio && this.isPlaying) {
+                    this.currentAudio.pause();
                     this.isPlaying = false;
+                    this.currentButton.textContent = '▶️ Resume';
+                    this.currentButton.classList.remove('playing');
+                    this.currentButton.classList.add('resuming');
+                }
+            }
+
+            resumeAudio() {
+                if (this.currentAudio && !this.isPlaying) {
+                    this.currentAudio.play();
+                    this.isPlaying = true;
+                    this.currentButton.textContent = '⏸️ Pause';
+                    this.currentButton.classList.remove('resuming');
+                    this.currentButton.classList.add('playing');
+                }
+            }
+
+            stopAudio() {
+                if (this.currentAudio) {
+                    this.currentAudio.pause();
+                    this.currentAudio.currentTime = 0;
                     this.currentAudio = null;
                 }
+                if (this.currentButton) {
+                    if (this.currentButton.textContent.includes('Play Podcast')) {
+                        this.currentButton.textContent = '🎙️ Play Podcast';
+                    } else {
+                        this.currentButton.textContent = '▶️ Play Summary';
+                    }
+                    this.currentButton.classList.remove('playing', 'resuming');
+                    this.currentButton = null;
+                }
+                this.isPlaying = false;
             }
 
             togglePodcast() {
@@ -1662,7 +1715,13 @@
                 `;
 
                 // Insert after the main container
-                document.querySelector('.main-container').insertAdjacentElement('afterend', resultsDiv);
+                const mainContainer = document.querySelector('.main-container');
+                if (mainContainer) {
+                    mainContainer.insertAdjacentElement('afterend', resultsDiv);
+                } else {
+                    // Fallback: append to body
+                    document.body.appendChild(resultsDiv);
+                }
 
                 // Add event listener for play button
                 resultsDiv.querySelector('.play-btn').addEventListener('click', (e) => {
@@ -1751,13 +1810,7 @@
                 }
 
                 // Stop any playing audio
-                if (this.currentAudio) {
-                    this.currentAudio.pause();
-                    this.currentAudio = null;
-                }
-
-                // Reset podcast state
-                this.isPlaying = false;
+                this.stopAudio();
                 this.podcastQueue = [];
                 this.currentPodcastIndex = 0;
             }

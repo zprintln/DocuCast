@@ -7,28 +7,42 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export async function fetchPdfText(pdfUrl) {
+export async function fetchPdfText(pdfUrlOrPath) {
   try {
-    console.log(`Fetching PDF from: ${pdfUrl}`);
+    console.log(`Fetching PDF from: ${pdfUrlOrPath}`);
     
-    const response = await fetch(pdfUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; SecureScholar/1.0)',
-        'Accept': 'application/pdf,text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-      },
-      timeout: 30000 // 30 second timeout
-    });
+    let buffer;
     
-    if (!response.ok) {
-      throw new Error(`PDF download failed: ${response.status} ${response.statusText}`);
+    // Check if it's a local file path or URL
+    if (pdfUrlOrPath.startsWith('http://') || pdfUrlOrPath.startsWith('https://')) {
+      // Handle URL
+      const response = await fetch(pdfUrlOrPath, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; SecureScholar/1.0)',
+          'Accept': 'application/pdf,text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+        },
+        timeout: 30000 // 30 second timeout
+      });
+      
+      if (!response.ok) {
+        throw new Error(`PDF download failed: ${response.status} ${response.statusText}`);
+      }
+      
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/pdf')) {
+        throw new Error('URL does not point to a PDF file');
+      }
+      
+      buffer = await response.arrayBuffer();
+    } else {
+      // Handle local file path
+      if (!fs.existsSync(pdfUrlOrPath)) {
+        throw new Error(`PDF file not found: ${pdfUrlOrPath}`);
+      }
+      
+      buffer = fs.readFileSync(pdfUrlOrPath);
     }
     
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/pdf')) {
-      throw new Error('URL does not point to a PDF file');
-    }
-    
-    const buffer = await response.arrayBuffer();
     const data = await pdfParse(Buffer.from(buffer));
     
     return {
