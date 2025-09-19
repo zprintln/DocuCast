@@ -321,6 +321,137 @@
             gap: 20px;
         }
 
+        .research-report-section {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            border: 2px solid #dee2e6;
+            text-align: center;
+        }
+
+        .research-report-section h3 {
+            color: #495057;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+
+        .research-report-section p {
+            color: #6c757d;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+
+        .research-report-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .research-report-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .research-report-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+
+        .report-summary {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #28a745;
+        }
+
+        .report-summary h3 {
+            color: #28a745;
+            margin-bottom: 15px;
+        }
+
+        .report-summary p {
+            line-height: 1.6;
+            color: #495057;
+        }
+
+        .report-details {
+            margin-bottom: 20px;
+        }
+
+        .report-details h3 {
+            color: #495057;
+            margin-bottom: 15px;
+        }
+
+        .report-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .meta-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .report-papers h3 {
+            color: #495057;
+            margin-bottom: 15px;
+        }
+
+        .papers-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .paper-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            transition: box-shadow 0.2s;
+        }
+
+        .paper-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .paper-item h4 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+
+        .paper-authors {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .paper-venue {
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        .more-papers {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            margin-top: 10px;
+        }
+
         .stat-item {
             text-align: center;
         }
@@ -400,6 +531,14 @@
                     </label>
                 </div>
             </div>
+
+            <div class="research-report-section">
+                <h3>📊 Research Report</h3>
+                <p>Generate a comprehensive audio research report from 10 relevant papers</p>
+                <button class="research-report-btn" id="researchReportBtn">
+                    🎙️ Generate Research Report
+                </button>
+            </div>
         </div>
 
         <div id="loading" class="loading" style="display: none;">
@@ -423,6 +562,21 @@
                 <div class="stats-grid" id="statsGrid"></div>
             </div>
         </div>
+
+        <div id="researchReport" class="results" style="display: none;">
+            <div class="results-header">
+                <h2 class="results-title" id="reportTitle">Research Report</h2>
+                <div class="podcast-controls">
+                    <button class="play-btn" id="reportPlayBtn">
+                        🎙️ Play Research Report
+                    </button>
+                </div>
+            </div>
+            <div id="reportContent"></div>
+            <div id="reportStats" class="stats" style="display: none;">
+                <div class="stats-grid" id="reportStatsGrid"></div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -433,6 +587,7 @@
                 this.podcastQueue = [];
                 this.currentPodcastIndex = 0;
                 this.isPodcastMode = false;
+                this.currentReport = null;
                 
                 this.initializeEventListeners();
             }
@@ -445,6 +600,14 @@
 
                 document.getElementById('podcastBtn').addEventListener('click', () => {
                     this.togglePodcast();
+                });
+
+                document.getElementById('researchReportBtn').addEventListener('click', () => {
+                    this.generateResearchReport();
+                });
+
+                document.getElementById('reportPlayBtn').addEventListener('click', () => {
+                    this.playResearchReport();
                 });
             }
 
@@ -702,6 +865,174 @@
 
             hideResults() {
                 document.getElementById('results').style.display = 'none';
+            }
+
+            async generateResearchReport() {
+                const query = document.getElementById('searchInput').value.trim();
+                
+                if (!query) {
+                    this.showError('Please enter a research topic first');
+                    return;
+                }
+
+                this.showLoading();
+                this.hideError();
+                this.hideResults();
+                this.hideResearchReport();
+
+                try {
+                    const response = await fetch('/research-report', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            query,
+                            maxResults: 10
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const report = await response.json();
+                    this.displayResearchReport(report);
+                    
+                } catch (error) {
+                    console.error('Research report error:', error);
+                    this.showError(`Research report generation failed: ${error.message}`);
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            displayResearchReport(report) {
+                this.currentReport = report;
+                
+                document.getElementById('reportTitle').textContent = 
+                    `Research Report: ${report.title}`;
+
+                const reportContent = document.getElementById('reportContent');
+                reportContent.innerHTML = `
+                    <div class="report-summary">
+                        <h3>📊 Executive Summary</h3>
+                        <p>${report.summary}</p>
+                    </div>
+                    
+                    <div class="report-details">
+                        <h3>📚 Research Details</h3>
+                        <div class="report-meta">
+                            <div class="meta-item">
+                                <strong>Papers Analyzed:</strong> ${report.paperCount}
+                            </div>
+                            <div class="meta-item">
+                                <strong>Estimated Duration:</strong> ${Math.round(report.duration / 60)} minutes
+                            </div>
+                            <div class="meta-item">
+                                <strong>Generated:</strong> ${new Date(report.createdAt).toLocaleString()}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="report-papers">
+                        <h3>📖 Key Papers Included</h3>
+                        <div class="papers-list">
+                            ${report.papers.slice(0, 5).map(paper => `
+                                <div class="paper-item">
+                                    <h4>${paper.title}</h4>
+                                    <p class="paper-authors">${paper.authors?.join(', ') || 'Unknown Authors'}</p>
+                                    <p class="paper-venue">${paper.venue || 'Unknown Venue'} • Importance: ${paper.importance}/10</p>
+                                </div>
+                            `).join('')}
+                            ${report.papers.length > 5 ? `<p class="more-papers">... and ${report.papers.length - 5} more papers</p>` : ''}
+                        </div>
+                    </div>
+                `;
+
+                this.updateReportStats(report);
+                this.showResearchReport();
+            }
+
+            updateReportStats(report) {
+                const statsGrid = document.getElementById('reportStatsGrid');
+                statsGrid.innerHTML = `
+                    <div class="stat-item">
+                        <div class="stat-value">${report.paperCount}</div>
+                        <div class="stat-label">Papers Analyzed</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${Math.round(report.duration / 60)}</div>
+                        <div class="stat-label">Minutes</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${Math.round(report.papers.reduce((sum, p) => sum + (p.importance || 0), 0) / report.papers.length)}</div>
+                        <div class="stat-label">Avg Importance</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${report.papers.filter(p => p.venue).length}</div>
+                        <div class="stat-label">With Venue Info</div>
+                    </div>
+                `;
+                document.getElementById('reportStats').style.display = 'block';
+            }
+
+            async playResearchReport() {
+                if (!this.currentReport) {
+                    this.showError('No research report available to play');
+                    return;
+                }
+
+                const button = document.getElementById('reportPlayBtn');
+                
+                try {
+                    // Stop current audio if playing
+                    if (this.currentAudio) {
+                        this.currentAudio.pause();
+                        this.currentAudio = null;
+                    }
+
+                    // Update button state
+                    button.textContent = '⏸️ Pause Report';
+                    button.classList.add('playing');
+
+                    // Set up new audio
+                    this.currentAudio = new Audio(this.currentReport.audioUrl);
+                    this.isPlaying = true;
+
+                    this.currentAudio.addEventListener('ended', () => {
+                        button.textContent = '🎙️ Play Research Report';
+                        button.classList.remove('playing');
+                        this.isPlaying = false;
+                        this.currentAudio = null;
+                    });
+
+                    this.currentAudio.addEventListener('error', (e) => {
+                        console.error('Audio error:', e);
+                        button.textContent = '❌ Error';
+                        button.classList.remove('playing');
+                        this.isPlaying = false;
+                        this.currentAudio = null;
+                        this.showError('Failed to play audio. Please try again.');
+                    });
+
+                    await this.currentAudio.play();
+
+                } catch (error) {
+                    console.error('Playback error:', error);
+                    button.textContent = '❌ Error';
+                    button.classList.remove('playing');
+                    this.showError('Failed to play research report audio');
+                }
+            }
+
+
+            showResearchReport() {
+                document.getElementById('researchReport').style.display = 'block';
+            }
+
+            hideResearchReport() {
+                document.getElementById('researchReport').style.display = 'none';
             }
         }
 

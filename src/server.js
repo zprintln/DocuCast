@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import { runSearch, getSearchHistory, getPaperById } from './orchestrator.js';
 import { getAllPapers, searchPapers, getPaperStats } from './redisClient.js';
 import { cleanupOldAudio } from './tts.js';
+import { generateResearchReport, getResearchReport, testAudioConversion } from './researchReport.js';
 
 dotenv.config();
 
@@ -148,6 +149,76 @@ app.get('/history', async (req, res) => {
     console.error('Get history error:', error);
     res.status(500).json({ 
       error: 'Failed to get history', 
+      message: error.message 
+    });
+  }
+});
+
+// Generate research report
+app.post('/research-report', async (req, res) => {
+  try {
+    const { query, maxResults = 10 } = req.body;
+    
+    if (!query || typeof query !== 'string') {
+      return res.status(400).json({ 
+        error: 'Query is required and must be a string' 
+      });
+    }
+    
+    console.log(`Research report request: "${query}" (maxResults: ${maxResults})`);
+    
+    const report = await generateResearchReport(query, { 
+      maxResults,
+      useFallbacks: true 
+    });
+    
+    res.json(report);
+    
+  } catch (error) {
+    console.error('Research report error:', error);
+    res.status(500).json({ 
+      error: 'Research report generation failed', 
+      message: error.message 
+    });
+  }
+});
+
+// Get research report by ID
+app.get('/research-report/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const report = await getResearchReport(id);
+    
+    if (!report) {
+      return res.status(404).json({ 
+        error: 'Research report not found' 
+      });
+    }
+    
+    res.json(report);
+    
+  } catch (error) {
+    console.error('Get research report error:', error);
+    res.status(500).json({ 
+      error: 'Failed to get research report', 
+      message: error.message 
+    });
+  }
+});
+
+// Test audio conversion
+app.post('/test-audio', async (req, res) => {
+  try {
+    console.log('Testing audio conversion...');
+    
+    const result = await testAudioConversion();
+    res.json(result);
+    
+  } catch (error) {
+    console.error('Audio test error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Audio test failed', 
       message: error.message 
     });
   }
