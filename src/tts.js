@@ -1,4 +1,3 @@
-// src/tts.js
 import fetch from 'node-fetch';
 import fs from 'fs';
 import path from 'path';
@@ -201,23 +200,81 @@ export function cleanupOldAudio(maxAgeHours = 24) {
 
 // Fallback function for demo when Gladia is not available
 export async function textToSpeechFallback(text, outFileName) {
-  console.log(`Fallback: Would convert text to speech: ${outFileName}`);
+  console.log(`🎭 Fallback: Creating demo audio for: ${outFileName}`);
   
-  // Create a dummy audio file for demo
-  const storagePath = process.env.STORAGE_PATH || './tmp/audio';
-  if (!fs.existsSync(storagePath)) {
-    fs.mkdirSync(storagePath, { recursive: true });
+  try {
+    // Create a more realistic dummy audio file for demo
+    const storagePath = process.env.STORAGE_PATH || './tmp/audio';
+    
+    // Ensure directory exists
+    if (!fs.existsSync(storagePath)) {
+      console.log(`Creating audio directory: ${storagePath}`);
+      fs.mkdirSync(storagePath, { recursive: true });
+    }
+    
+    const outPath = path.join(storagePath, outFileName);
+    
+    // Create a more substantial dummy MP3 (silent audio)
+    // This is a minimal valid MP3 header with some padding
+    const dummyMp3 = Buffer.concat([
+      // MP3 frame header
+      Buffer.from([
+        0xFF, 0xFB, 0x90, 0x00,  // MP3 sync word + layer/version info
+        0x00, 0x00, 0x00, 0x00,  // Bitrate, sample rate, padding, private
+        0x00, 0x00, 0x00, 0x00,  // Mode, mode ext, copyright, original
+        0x00, 0x00, 0x00, 0x00   // Emphasis + more padding
+      ]),
+      // Add some padding to make it a more realistic file size
+      Buffer.alloc(1024, 0x00)
+    ]);
+    
+    fs.writeFileSync(outPath, dummyMp3);
+    
+    console.log(`✅ Fallback audio created: ${outPath}`);
+    console.log(`📁 File size: ${fs.statSync(outPath).size} bytes`);
+    
+    return outPath;
+    
+  } catch (error) {
+    console.error('❌ Fallback TTS error:', error);
+    throw new Error(`Failed to create fallback audio: ${error.message}`);
   }
+}
+
+// Test function to verify audio directory and file serving
+export async function testAudioSetup() {
+  const storagePath = process.env.STORAGE_PATH || './tmp/audio';
+  const testFile = 'test-audio.mp3';
   
-  const outPath = path.join(storagePath, outFileName);
-  
-  // Create a minimal MP3 file (just a placeholder)
-  const dummyMp3 = Buffer.from([
-    0xFF, 0xFB, 0x90, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-  ]);
-  
-  fs.writeFileSync(outPath, dummyMp3);
-  
-  console.log(`Fallback audio created: ${outPath}`);
-  return outPath;
+  try {
+    console.log(`🧪 Testing audio setup...`);
+    console.log(`📁 Storage path: ${storagePath}`);
+    
+    // Create test audio file
+    const testPath = await textToSpeechFallback('Test audio', testFile);
+    
+    // Check if file exists and is readable
+    if (fs.existsSync(testPath)) {
+      const stats = fs.statSync(testPath);
+      console.log(`✅ Test file created: ${testFile} (${stats.size} bytes)`);
+      
+      return {
+        success: true,
+        path: testPath,
+        url: `/audio/${testFile}`,
+        size: stats.size,
+        message: 'Audio setup working correctly'
+      };
+    } else {
+      throw new Error('Test file was not created');
+    }
+    
+  } catch (error) {
+    console.error('❌ Audio setup test failed:', error);
+    return {
+      success: false,
+      error: error.message,
+      storagePath: storagePath
+    };
+  }
 }

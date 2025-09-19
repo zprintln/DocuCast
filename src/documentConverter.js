@@ -1,4 +1,3 @@
-// src/documentConverter.js
 import { fetchPdfText, extractRelevantSections } from './pdfParser.js';
 import { summarizePaper, summarizePaperFallback } from './summarizer.js';
 import { textToSpeech, textToSpeechFallback } from './tts.js';

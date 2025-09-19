@@ -1,4 +1,3 @@
-// src/orchestrator.js
 import { securityValidateQuery } from './validator.js';
 import { fetchScholarResults, fetchScholarResultsFallback } from './apifyClient.js';
 import { fetchPdfText, extractRelevantSections, fetchPdfTextFallback } from './pdfParser.js';

@@ -1,4 +1,3 @@
-// test-horizon3.js - Test Horizon3.ai API integration
 import dotenv from 'dotenv';
 import { securityValidateQuery } from './src/validator.js';
 

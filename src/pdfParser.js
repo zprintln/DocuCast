@@ -1,4 +1,3 @@
-// src/pdfParser.js
 import fetch from 'node-fetch';
 import pdfParse from 'pdf-parse';
 import fs from 'fs';

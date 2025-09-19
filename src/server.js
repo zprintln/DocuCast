@@ -322,6 +322,20 @@ app.post('/generate-audio', async (req, res) => {
   }
 });
 
+// Test audio setup - add this to server.js
+app.get('/test-audio-setup', async (req, res) => {
+  try {
+    const { testAudioSetup } = await import('./tts.js');
+    const result = await testAudioSetup();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 // Generate RSS feed for podcast
 app.get('/podcast/:topic.rss', async (req, res) => {
   try {
