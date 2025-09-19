@@ -4,6 +4,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import { v4 as uuidv4 } from 'uuid';
 import { runSearch, getSearchHistory, getPaperById } from './orchestrator.js';
 import { getAllPapers, searchPapers, getPaperStats } from './redisClient.js';
 import { cleanupOldAudio } from './tts.js';
@@ -162,7 +163,7 @@ app.get('/history', async (req, res) => {
     res.json(history);
   } catch (error) {
     console.error('Get history error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to get history', 
       message: error.message 
     });
@@ -287,7 +288,7 @@ app.post('/generate-audio', async (req, res) => {
     
     // Import TTS functions
     const { textToSpeech, textToSpeechFallback } = await import('./tts.js');
-    const { v4 as uuidv4 } = await import('uuid');
+    const { v4: uuidv4 } = await import('uuid');
     
     // Generate unique filename
     const audioId = uuidv4();
