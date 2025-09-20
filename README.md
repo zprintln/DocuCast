@@ -70,10 +70,6 @@ PORT=3000
 APIFY_TOKEN=your_apify_token
 APIFY_ACTOR=apify/google-scholar
 
-# LLM (Anthropic / Claude or other)
-LLM_PROVIDER=anthropic
-LLM_API_KEY=your_anthropic_api_key
-
 # Embeddings (OpenAI / Cohere / any)
 EMBEDDING_PROVIDER=openai
 EMBEDDING_API_KEY=your_openai_api_key
